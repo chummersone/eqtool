@@ -2,9 +2,173 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
+        <link rel="stylesheet" href="https://chummersone.github.io/assets/css/style.css?v=f6040d589f1187e6eaa1ec97f2b3af33299fb0ad">
+        <link rel="stylesheet" href="css/eqtool.css?v=22">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js" integrity="sha512-6HrPqAvK+lZElIZ4mZ64fyxIBTsaX5zAFZg2V/2WT+iKPrFzTzvx6QAsLW2OaLwobhMYBog/+bvmIEEGXi0p1w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src="scripts/eq.js"></script>
+        <script>
+            var numberOfBiquads = 0;
+
+            function addBiquadControl(eqObj, graphObj) {
+                const index = numberOfBiquads
+                numberOfBiquads += 1
+                const num = String(index)
+
+                // Add initial response
+                eqObj.addBiquad()
+                var mag = new Float32Array(graphObj.numPoints)
+                var phase = new Float32Array(graphObj.numPoints)
+                eqObj.getFrequencyResponse(graphObj.frequency, mag, phase)
+                graphObj.addResponse(mag, phase)
+
+                function updateGraph(idx) {
+                    eqObj.biquads[idx].getFrequencyResponse(graphObj.frequency, graphObj.magnitudes[idx], graphObj.phases[idx])
+                    graphObj.redraw()
+                }
+
+                // The group of biquad controls
+                var group = document.createElement("div")
+                group.className = "controlGroup"
+
+                // Add the filter type select box
+                var typeControl = document.createElement("div")
+                typeControl.className = "control"
+                var typeLabel = document.createElement("label")
+                typeLabel.htmlFor = "biquadType-" + num
+                var typeInput = document.createElement("select")
+                typeInput.id = typeLabel.htmlFor
+                types = ["lowpass", "highpass", "bandpass", "lowshelf", "highshelf", "peaking", "notch"]
+                for (var i = 0; i < types.length; i++) {
+                    var option = document.createElement("option")
+                    option.value = types[i]
+                    option.text = types[i]
+                    typeInput.appendChild(option)
+                }
+                typeInput.addEventListener("change", function(event) {
+                    eqObj.biquads[index].type = event.target.value
+                    updateGraph(index);
+                })
+                typeInput.value = eqObj.biquads[index].type.defaultValue
+                typeControl.append(typeLabel, typeInput)
+
+                // Add remaining controls
+                function createNumberInput(id, min, max, step, value, onChange) {
+                    var control = document.createElement("div")
+                    control.className = "control"
+                    var label = document.createElement("label")
+                    label.htmlFor = id
+                    var input = document.createElement("input")
+                    input.id = id
+                    input.min = min
+                    input.max = max
+                    input.step = step
+                    input.value = value
+                    input.addEventListener("change", onChange)
+                    control.append(label, input)
+                    return control
+                }
+
+                var freqControl = createNumberInput("biquadFrequency-" + num, 1, 20000, 1, eqObj.biquads[index].frequency.defaultValue, function(event) {
+                    eqObj.biquads[index].frequency.value = Number(event.target.value)
+                    updateGraph(index);
+                })
+
+                var qControl = createNumberInput("biquadQ-" + num, 0, 14, 0.00001, eqObj.biquads[index].Q.defaultValue, function(event) {
+                    eqObj.biquads[index].Q.value = Number(event.target.value)
+                    updateGraph(index);
+                })
+
+                var gainControl = createNumberInput("biquadGain-" + num, -40, 40, 0.1, eqObj.biquads[index].gain.defaultValue, function(event) {
+                    eqObj.biquads[index].gain.value = Number(event.target.value)
+                    updateGraph(index);
+                })
+
+                // Add the controls to the group
+                group.append(typeControl, freqControl, qControl, gainControl)
+                updateGraph(index);
+                document.getElementById("filterControls").append(group)
+            }
+
+            document.addEventListener("DOMContentLoaded", function(event) {
+                const audioCtx = new AudioContext();
+                var source = audioCtx.createMediaElementSource(document.getElementById("audioPlayer"))
+
+                // Add graphs
+                var graph = new EqGraph(
+                    document.getElementById("eqGraphCanvasMag"),
+                    document.getElementById("eqGraphCanvasPhase")
+                )
+
+                // Add EQ
+                var eq = new ParametricEQ(audioCtx)
+
+                // Connect input
+                source.connect(eq.input)
+                eq.output.connect(audioCtx.destination)
+
+                document.getElementById("audioFileInput").addEventListener("change", function(event) {
+                    var file = event.target.files[0]
+                    var audio = document.getElementById("audioPlayer")
+                    const reader = new FileReader()
+                    reader.onloadend = (e) => {
+                        audio.src = e.target.result
+
+                        var promise = audio.play()
+                        if (promise) {
+                            //Older browsers may not return a promise, according to the MDN website
+                            promise.catch((error) => {
+                                console.log(error)
+                                window.alert("Error loading audio file.\n\nTry a different file, or a different browser.")
+                            });
+                        }
+                        audioCtx.resume()
+                    };
+                    reader.readAsDataURL(file)
+                }, false)
+
+                document.getElementById("addFilterButton").addEventListener("click", () => {
+                    addBiquadControl(eq, graph)
+                    audioCtx.resume();
+                })
+
+            })
+        </script>
     </head>
 
     <body>
-        <h1>Hello World!</h1>
+        <h1>EQ Designer</h1>
+
+        <div class="controlPanel" id="mainControls">
+
+            <div class="control">
+                <input type="file" accept="audio/*" id="audioFileInput" />
+            </div>
+            <div class="control">
+                <audio controls id="audioPlayer">
+            </div>
+            <div class="control">
+                <button id="addFilterButton">Add filter</button>
+            </div>
+            <div class="control">
+                <button id="removeFilterButton">Remove filter</button>
+            </div>
+
+        </div>
+
+        <div class="controlPanel" id="filterControls"></div>
+
+
+
+        </div>
+
+        <div class="controlPanel" id="plotControls">
+
+            <div id="eqGraph">
+                <canvas id="eqGraphCanvasMag">Canvas not Supported</canvas>
+                <canvas id="eqGraphCanvasPhase">Canvas not Supported</canvas>
+            </div>
+
+        </div>
+
     </body>
 </html>
