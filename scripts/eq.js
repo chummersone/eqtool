@@ -35,6 +35,9 @@ class ParametricEQ {
     }
 
     removeBiquad(index) {
+        if (index.constructor.name == "BiquadFilterNode") {
+            index = this.biquads.indexOf(index)
+        }
         if ((index >= 0) && (index < this.numBiquads) && (this.numBiquads > 0)) {
             // disconnect nodes
             this.input.disconnect(this.biquads[0])
@@ -61,6 +64,7 @@ class ParametricEQ {
                 this.input.connect(this.output)
             }
         }
+        return index
     }
 
     get numBiquads() {
@@ -184,7 +188,7 @@ class EqDesigner extends ParametricEQ {
 
     addBiquad() {
         // Add the biquad to the audio context
-        super.addBiquad()
+        var bq = super.addBiquad()
 
         // calculate the new response
         var magCopy = new Float32Array(this.numPoints)
@@ -195,19 +199,19 @@ class EqDesigner extends ParametricEQ {
         this.magPlot.data.datasets.push({data: magCopy.map(dB), label: this.numBiquads})
         this.phasePlot.data.datasets.push({data: phaseCopy.map(degrees), label: this.numBiquads})
         this.redraw()
+        return bq
     }
 
     removeBiquad(index) {
-        super.removeBiquad(index)
-        if ((index > 0) && (index < this.numBiquads)) {
-            this.biquads.splice(index, 1)
+        index = super.removeBiquad(index)
+        if ((index >= 0) && (index <= this.numBiquads) && (this.numBiquads > 0)) {
             this.magnitudes.splice(index, 1)
             this.phases.splice(index, 1)
             this.magPlot.data.datasets.splice(index + 1, 1)
             this.phasePlot.data.datasets.splice(index + 1, 1)
             for (let i = 0; i < this.numBiquads; i++) {
-                this.magPlot.data.datasets[i].label = i + 1
-                this.phasePlot.data.datasets[i].label = i + 1
+                this.magPlot.data.datasets[i + 1].label = i + 1
+                this.phasePlot.data.datasets[i + 1].label = i + 1
             }
             this.redraw()
         }

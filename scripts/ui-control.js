@@ -17,12 +17,11 @@ function playAudio(context, file) {
 }
 
 function addBiquadControl(context) {
-    const index = context.numberOfBiquads
-    context.numberOfBiquads += 1
-    const num = String(index)
+    const index = context.eq.numBiquads
+    const num = String(Date.now())
 
     // Add biquad and its response
-    context.eq.addBiquad()
+    var biquad = context.eq.addBiquad()
 
     // The group of biquad controls
     var group = document.createElement("div")
@@ -43,10 +42,10 @@ function addBiquadControl(context) {
         typeInput.appendChild(option)
     }
     typeInput.addEventListener("change", function(event) {
-        context.eq.biquads[index].type = event.target.value
+        biquad.type = event.target.value
         context.eq.redraw();
     })
-    typeInput.value = context.eq.biquads[index].type.defaultValue
+    typeInput.value = biquad.type.defaultValue
     typeControl.append(typeLabel, typeInput)
 
     // Add remaining controls
@@ -66,23 +65,33 @@ function addBiquadControl(context) {
         return control
     }
 
-    var freqControl = createNumberInput("biquadFrequency-" + num, 1, 20000, 1, context.eq.biquads[index].frequency.defaultValue, function(event) {
-        context.eq.biquads[index].frequency.value = Number(event.target.value)
+    var freqControl = createNumberInput("biquadFrequency-" + num, 1, 20000, 1, biquad.frequency.defaultValue, function(event) {
+        biquad.frequency.value = Number(event.target.value)
         context.eq.redraw();
     })
 
-    var qControl = createNumberInput("biquadQ-" + num, 0, 14, 0.00001, context.eq.biquads[index].Q.defaultValue, function(event) {
-        context.eq.biquads[index].Q.value = Number(event.target.value)
+    var qControl = createNumberInput("biquadQ-" + num, 0, 14, 0.00001, biquad.Q.defaultValue, function(event) {
+        biquad.Q.value = Number(event.target.value)
         context.eq.redraw();
     })
 
-    var gainControl = createNumberInput("biquadGain-" + num, -40, 40, 0.1, context.eq.biquads[index].gain.defaultValue, function(event) {
-        context.eq.biquads[index].gain.value = Number(event.target.value)
+    var gainControl = createNumberInput("biquadGain-" + num, -40, 40, 0.1, biquad.gain.defaultValue, function(event) {
+        biquad.gain.value = Number(event.target.value)
+        context.eq.redraw();
+    })
+
+    var removeButton = document.createElement("div")
+    removeButton.className = "button"
+    removeButton.id = "biquadDelete-" + num
+    removeButton.innerHTML = "Delete"
+    removeButton.addEventListener("click", function(event) {
+        context.eq.removeBiquad(biquad)
+        group.remove()
         context.eq.redraw();
     })
 
     // Add the controls to the group
-    group.append(typeControl, freqControl, qControl, gainControl)
+    group.append(typeControl, freqControl, qControl, gainControl, removeButton)
     context.eq.redraw();
     document.getElementById("filterControls").append(group)
 }
