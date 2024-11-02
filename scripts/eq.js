@@ -2,6 +2,10 @@ function dB(x) {
     return 20 * Math.log10(x)
 }
 
+function degrees(x) {
+    return 180 * (x / Math.PI)
+}
+
 class ParametricEQ {
 
     constructor(audioContext) {
@@ -63,32 +67,18 @@ class ParametricEQ {
         return this.biquads.length
     }
 
-    getFrequencyResponse(frequencyArray, magResponseOutput, phaseResponseOutput) {
-        var nPoints = frequencyArray.length
-        var tmpMag = new Float32Array(nPoints)
-        var tmpPhase = new Float32Array(nPoints)
-        phaseResponseOutput.fill(0)
-        magResponseOutput.fill(this.input.gain.value * this.output.gain.value)
-
-        for (let n = 0; n < this.numBiquads; n++) {
-            this.biquads[n].getFrequencyResponse(frequencyArray, tmpMag, tmpPhase)
-            for (let i = 0; i < nPoints; i++) {
-                magResponseOutput[i] *= tmpMag[i]
-                phaseResponseOutput[i] += tmpPhase[i]
-            }
-        }
-    }
-
 }
 
 
-class EqGraph {
+class EqDesigner extends ParametricEQ {
 
     #numPoints; // number of frequency points
     #fmin = 10;
     #fmax = 20000;
 
-    constructor(magCtx, phsCtx) {
+    constructor(audioContext, magCtx, phsCtx) {
+
+        super(audioContext)
 
         this.#numPoints = 256
         this.frequency = new Float32Array(this.#numPoints)
@@ -98,6 +88,7 @@ class EqGraph {
         this.phases = []
 
         this.overallMag = new Float32Array(this.#numPoints)
+        this.overallMag.fill(1)
         this.overallPhase = new Float32Array(this.#numPoints)
 
         var xconfig = {
@@ -138,15 +129,21 @@ class EqGraph {
                             text: 'Magnitude / dB',
                             display: true,
                         },
-                    }
-                }
-            }
+                    },
+                },
+                plugins: {
+                    colors: {
+                        enabled: true,
+                        forceOverride: true,
+                    },
+                },
+            },
         })
 
         this.phasePlot = new Chart(phsCtx, {
             type: 'line',
             data: {
-                datasets: [{data: this.overallPhase, label: 'Overall'}],
+                datasets: [{data: this.overallPhase.map(degrees), label: 'Overall'}],
                 labels: this.frequency,
             },
             options: {
@@ -156,11 +153,20 @@ class EqGraph {
                         title: {
                             text: 'Phase / °',
                             display: true,
-                        }
-                    }
-                }
-            }
+                        },
+                    },
+                },
+                plugins: {
+                    colors: {
+                        enabled: true,
+                        forceOverride: true,
+                    },
+                },
+            },
         })
+
+        this.magPlot.update()
+        this.phasePlot.update()
     }
 
     updateFrequencies() {
@@ -176,35 +182,42 @@ class EqGraph {
         return this.#numPoints
     }
 
-    get numPlots() {
-        return this.magnitudes.length
-    }
+    addBiquad() {
+        // Add the biquad to the audio context
+        super.addBiquad()
 
-    addResponse(mag, phase) {
-        var magCopy = new Float32Array(mag)
-        var phaseCopy = new Float32Array(phase)
+        // calculate the new response
+        var magCopy = new Float32Array(this.numPoints)
+        var phaseCopy = new Float32Array(this.numPoints)
+        this.biquads[this.numBiquads - 1].getFrequencyResponse(this.frequency, magCopy, phaseCopy)
         this.magnitudes.push(magCopy)
         this.phases.push(phaseCopy)
-        this.magPlot.data.datasets.push({data: magCopy.map(dB)})
-        this.phasePlot.data.datasets.push({data: phaseCopy})
+        this.magPlot.data.datasets.push({data: magCopy.map(dB), label: this.numBiquads})
+        this.phasePlot.data.datasets.push({data: phaseCopy.map(degrees), label: this.numBiquads})
         this.redraw()
     }
 
-    removeResponse(index) {
-        if ((index > 0) && (index < this.numPlots)) {
+    removeBiquad(index) {
+        super.removeBiquad(index)
+        if ((index > 0) && (index < this.numBiquads)) {
+            this.biquads.splice(index, 1)
             this.magnitudes.splice(index, 1)
             this.phases.splice(index, 1)
             this.magPlot.data.datasets.splice(index + 1, 1)
             this.phasePlot.data.datasets.splice(index + 1, 1)
+            for (let i = 0; i < this.numBiquads; i++) {
+                this.magPlot.data.datasets[i].label = i + 1
+                this.phasePlot.data.datasets[i].label = i + 1
+            }
             this.redraw()
         }
-
     }
 
     recalculateOverall() {
-        this.overallMag.fill(1)
+        this.overallMag.fill(this.input.gain.value * this.output.gain.value)
         this.overallPhase.fill(0)
-        for (let i = 0; i < this.numPlots; i++) {
+        for (let i = 0; i < this.numBiquads; i++) {
+            this.biquads[i].getFrequencyResponse(this.frequency, this.magnitudes[i], this.phases[i])
             for (let n = 0; n < this.numPoints; n++) {
                 this.overallMag[n] *= this.magnitudes[i][n]
                 this.overallPhase[n] += this.phases[i][n]
@@ -214,17 +227,12 @@ class EqGraph {
 
     redraw() {
         this.recalculateOverall()
-        for (let i = 0; i < this.numPlots; i++) {
-            this.magPlot.data.datasets[i+1] = {data: this.magnitudes[i].map(dB)}
-            this.phasePlot.data.datasets[i+1] = {data: this.phases[i]}
-            this.magPlot.data.datasets[i+1]['label'] = i+1
-            this.phasePlot.data.datasets[i+1]['label'] = i+1
+        for (let i = 0; i < this.numBiquads; i++) {
+            this.magPlot.data.datasets[i+1].data = this.magnitudes[i].map(dB)
+            this.phasePlot.data.datasets[i+1].data = this.phases[i].map(degrees)
         }
-        let i = this.numPlots
-        this.magPlot.data.datasets[0] = {data: this.overallMag.map(dB)}
-        this.phasePlot.data.datasets[0] = {data: this.overallPhase}
-        this.magPlot.data.datasets[0]['label'] = "Overall"
-        this.phasePlot.data.datasets[0]['label'] = "Overall"
+        this.magPlot.data.datasets[0].data = this.overallMag.map(dB)
+        this.phasePlot.data.datasets[0].data = this.overallPhase.map(degrees)
 
         this.magPlot.update()
         this.phasePlot.update()
