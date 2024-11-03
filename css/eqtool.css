@@ -22,10 +22,6 @@ ul, ol {
     padding-left: 40px;
 }
 
-ul.ui-tabs-nav {
-    background-color: #444;
-}
-
 a:link, a:visited {
     color: #007fff;
 }
@@ -43,6 +39,10 @@ input[type=text][disabled], table, tr, th, td, textarea:disabled {
 
 input[type=checkbox].flag {
     filter: grayscale(100%);
+}
+
+button {
+
 }
 
 body {

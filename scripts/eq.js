@@ -208,7 +208,7 @@ class EqDesigner extends ParametricEQ {
 
     removeBiquad(index) {
         index = super.removeBiquad(index)
-        if ((index >= 0) && (index <= this.numBiquads) && (this.numBiquads > 0)) {
+        if ((index >= 0) && (index < this.magnitudes.length) && (this.magnitudes.length > 0)) {
             this.magnitudes.splice(index, 1)
             this.phases.splice(index, 1)
             this.magPlot.data.datasets.splice(index + 1, 1)
