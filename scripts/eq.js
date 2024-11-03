@@ -133,6 +133,8 @@ class EqDesigner extends ParametricEQ {
                             text: 'Magnitude / dB',
                             display: true,
                         },
+                        min: -20,
+                        max: 20,
                     },
                 },
                 plugins: {
@@ -158,6 +160,8 @@ class EqDesigner extends ParametricEQ {
                             text: 'Phase / °',
                             display: true,
                         },
+                        min: -180,
+                        max: 180,
                     },
                 },
                 plugins: {

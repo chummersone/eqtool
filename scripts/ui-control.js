@@ -61,7 +61,7 @@ function addBiquadControl(context) {
     typeControl.append(typeLabel, typeInput)
 
     // Add remaining controls
-    function createNumberInput(id, min, max, step, value, convertTo, convertFrom) {
+    function createNumberInput(id, min, max, step, value, param, convertTo, convertFrom) {
         var control = document.createElement("div")
         control.className = "control"
         var label = document.createElement("label")
@@ -85,12 +85,12 @@ function addBiquadControl(context) {
 
         slider.addEventListener("change", function(event) {
             number.value = convertFrom(slider.value)
-            biquad.frequency.value = number.value
+            param.value = number.value
             context.eq.redraw();
         })
         number.addEventListener("change", function(event) {
             slider.value = convertTo(number.value)
-            biquad.frequency.value = number.value
+            param.value = number.value
             context.eq.redraw()
         })
 
@@ -98,13 +98,13 @@ function addBiquadControl(context) {
         return control
     }
 
-    var freqControl = createNumberInput("biquadFrequency-" + num, 1, 20000, 1, biquad.frequency.defaultValue, toMel, function(m) { return Math.round(fromMel(m)) })
+    var freqControl = createNumberInput("biquadFrequency-" + num, 1, 20000, 1, biquad.frequency.defaultValue, biquad.frequency, toMel, function(m) { return Math.round(fromMel(m)) })
 
-    var qControl = createNumberInput("biquadQ-" + num, 0, 14, 0.00001, biquad.Q.defaultValue, doNothing, doNothing)
+    var qControl = createNumberInput("biquadQ-" + num, 0, 10, 0.0001, biquad.Q.defaultValue, biquad.Q, doNothing, doNothing)
 
-    var gainControl = createNumberInput("biquadGain-" + num, -40, 40, 0.1, biquad.gain.defaultValue, doNothing, doNothing)
+    var gainControl = createNumberInput("biquadGain-" + num, -20, 20, 0.1, biquad.gain.defaultValue, biquad.gain, doNothing, doNothing)
 
-    var removeButton = document.createElement("div")
+    var removeButton = document.createElement("span")
     removeButton.className = "button"
     removeButton.id = "biquadDelete-" + num
     removeButton.innerHTML = "Delete"
