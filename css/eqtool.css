@@ -1,177 +1,66 @@
-html {
-    padding: 10px;
-    box-sizing: border-box;
+th, td {
+    text-align: center;
 }
 
-html, .ui-widget {
-    font-family: "Nanum Gothic", sans-serif;
-    font-weight: 400;
-    font-size: 16px;
-    font-style: normal;
+div.popup-bg {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 2;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
 }
 
-html, body, input, fieldset, select, textarea, div.ui-tabs {
-    background-color: #222;
+div.popup-content {
+    padding: 20px;
 }
 
-body {
-    counter-reset: eq;
-}
-
-ul, ol {
-    padding-left: 40px;
-}
-
-a:link, a:visited {
-    color: #007fff;
-}
-
-a:hover {
-    filter: brightness(150%);
-}
-
-input[type=text][disabled], table, tr, th, td, textarea:disabled {
-    background-color: #444;
-    -webkit-text-fill-color: #bbb;
-    color: #bbb;
-    opacity: 1; /* required on iOS */
-}
-
-input[type=checkbox].flag {
-    filter: grayscale(100%);
-}
-
-button {
-
-}
-
-body {
-    font: inherit;
-}
-
-body, input, select, p, label, th, td, legend, textarea, a:active, h1, h2, h3 {
-    color: #ccc;
-}
-
-h1 {
-    margin: 20px 0;
-    font-size: 2em;
-}
-
-h2 {
-    margin: 18px 0;
-}
-
-p {
-    margin: 15px 0;
-}
-
-h1, h2, h3, p {
+div.popup-content label {
     text-align: left;
 }
 
-fieldset {
-    width: 100%;
-    display: inline-block;
-    margin: 5px 0px;
-    border-radius: 5px;
-    padding: 20px;
-    -webkit-column-break-inside: avoid;
-    page-break-inside: avoid;
-    break-inside: avoid;
-}
-
-legend + * {
-    margin-top: 0;
-}
-
-legend {
-    font-weight: 700;
-}
-
-input[type=text] {
-    text-overflow: ellipsis;
-}
-
-input {
-    text-align: right;
-}
-
-input[type=text].error,
-input[type=number].error,
-select.error,
-textarea.error {
-    border-color: darkred;
-    background-color: #da8383;
-}
-
-input[type=text], input[type=number], select, textarea {
-    width: 100%;
-    padding: 8px;
-    resize: vertical;
-}
-
-select::-ms-expand {
-    display: none;
-}
-
-select {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    padding: 8px;
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23CCCCCC%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
-    background-repeat: no-repeat, repeat;
-    background-position: right .7em top 50%, 0 0;
-    background-size: .65em auto, 100%;
-}
-
-input[type=text], input[type=number], select, textarea, table {
-    border: 1px solid #ccc;
+div.popup-content, div.controlGroup, div.controlPanel {
+    background-color: #222;
+    border: 2px solid #ccc;
     border-radius: 4px;
 }
 
-/* Style the label to display next to the inputs */
-label {
+div#eqGraph {
+
+}
+
+div.controlGroup, div.popup-content div.control {
+    padding: 0px;
     display: inline-block;
-    padding-right: 5px;
-    text-align: right;
+    margin: 10px;
+    max-width: 300px;
+    vertical-align: top;
+}
+
+div.controlGroup input, div.controlGroup label {
+    text-align: left;
     width: 100%;
-    margin: 0.35ex 0;
-}
-
-.center {
-    text-align: center;
-}
-
-.col {
-    margin-top: 6px;
-    display: inline-block;
-    text-align: center;
 }
 
 div.control {
-    margin: 8px 0;
-    width: 100%;
-    position: relative;
+    padding: 10px;
+    margin: 5px;
 }
 
-sup {
-    margin-left: 0.1em;
+div.controlGroup div.control {
+    background-color: #444;
 }
 
-.tooltip {
-    position: relative;
-    border-bottom: 1px dashed #bbb;
-}
-
-.tooltip:after {
-    content: "ⓘ";
-    vertical-align: super;
-    font-size: 70%;
-    margin-left: 0.1em;
-}
-
-.ui-tooltip-content {
-    font-size: 90%;
+div.controlPanel {
+    margin: 10px;
 }

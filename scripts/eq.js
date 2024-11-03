@@ -71,6 +71,92 @@ class ParametricEQ {
         return this.biquads.length
     }
 
+    coefficients(fs) {
+        var coeffs = []
+        this.biquads.forEach(function(biquad) {
+            var acoeff = new Float32Array(3)
+            var bcoeff = new Float32Array(3)
+
+            var g = biquad.gain.value
+            var f0 = biquad.frequency.value
+            var q = biquad.Q.value
+
+            var a = 10 ** (g / 40)
+            var w0 = 2 * Math.PI * (f0 / fs)
+            var aq = Math.sin(w0) / (2 * q)
+            var aqdb = Math.sin(w0) / (2 * (10 ** (q / 20)))
+            var s = 1
+            var as = (Math.sin(w0) / (2)) * Math.sqrt((a + (1 / a)) * ((1 / s) - 1) + 2)
+            var asqrt = Math.sqrt(a)
+
+            switch (biquad.type) {
+                case "lowpass":
+                    bcoeff[0] = (1 - Math.cos(w0)) / 2
+                    bcoeff[1] = 1 - Math.cos(w0)
+                    bcoeff[2] = (1 - Math.cos(w0)) / 2
+                    acoeff[0] = 1 + aqdb
+                    acoeff[1] = -2 * Math.cos(w0)
+                    acoeff[2] = 1 - aqdb
+                    break
+                case "highpass":
+                    bcoeff[0] = (1 + Math.cos(w0)) / 2
+                    bcoeff[1] = -(1 + Math.cos(w0))
+                    bcoeff[2] = (1 + Math.cos(w0)) / 2
+                    acoeff[0] = 1 + aqdb
+                    acoeff[1] = -2 * Math.cos(w0)
+                    acoeff[2] = 1 - aqdb
+                    break
+                case "bandpass":
+                    bcoeff[0] = aq
+                    bcoeff[1] = 0
+                    bcoeff[2] = -aq
+                    acoeff[0] = 1 + aq
+                    acoeff[1] = -2 * Math.cos(w0)
+                    acoeff[2] = 1 - aq
+                    break
+                case "notch":
+                    bcoeff[0] = 1
+                    bcoeff[1] = -2 * Math.cos(w0)
+                    bcoeff[2] = 1
+                    acoeff[0] = 1 + aq
+                    acoeff[1] = -2 * Math.cos(w0)
+                    acoeff[2] = 1 - aq
+                    break
+                case "peaking":
+                    bcoeff[0] = 1 + (aq * a)
+                    bcoeff[1] = -2 * Math.cos(w0)
+                    bcoeff[2] = 1 - (aq * a)
+                    acoeff[0] = 1 + (aq / a)
+                    acoeff[1] = -2 * Math.cos(w0)
+                    acoeff[2] = 1 - (aq / a)
+                    break
+                case "lowshelf":
+                    bcoeff[0] = a * ((a + 1) - ((a - 1) * (Math.cos(w0))) + (2 * as * asqrt))
+                    bcoeff[1] = 2 * a * ((a - 1) - ((a + 1) * (Math.cos(w0))))
+                    bcoeff[2] = a * ((a + 1) - ((a - 1) * (Math.cos(w0))) - (2 * as * asqrt))
+                    acoeff[0] = (a + 1) + ((a - 1) * (Math.cos(w0))) + (2 * as * asqrt)
+                    acoeff[1] = -2 * a * ((a - 1) + ((a + 1) * (Math.cos(w0))))
+                    acoeff[2] = (a + 1) + ((a - 1) * (Math.cos(w0))) - (2 * as * asqrt)
+                    break
+                case "highshelf":
+                    bcoeff[0] = a * ((a + 1) + ((a - 1) * (Math.cos(w0))) + (2 * as * asqrt))
+                    bcoeff[1] = -2 * a * ((a - 1) + ((a + 1) * (Math.cos(w0))))
+                    bcoeff[2] = a * ((a + 1) + ((a - 1) * (Math.cos(w0))) - (2 * as * asqrt))
+                    acoeff[0] = (a + 1) - ((a - 1) * (Math.cos(w0))) + (2 * as * asqrt)
+                    acoeff[1] = 2 * a * ((a - 1) - ((a + 1) * (Math.cos(w0))))
+                    acoeff[2] = (a + 1) - ((a - 1) * (Math.cos(w0))) - (2 * as * asqrt)
+                    break
+            }
+
+            var a0 = acoeff[0]
+            acoeff = acoeff.map(function(x) { return x / a0 })
+            bcoeff = bcoeff.map(function(x) { return x / a0 })
+
+            coeffs.push({a: acoeff, b: bcoeff})
+        })
+        return coeffs
+    }
+
 }
 
 

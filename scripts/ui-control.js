@@ -54,6 +54,7 @@ function addBiquadControl(context) {
     typeControl.className = "control"
     var typeLabel = document.createElement("label")
     typeLabel.htmlFor = "biquadType-" + num
+    typeLabel.innerText = "Filter type"
     var typeInput = document.createElement("select")
     typeInput.id = typeLabel.htmlFor
     types = ["lowpass", "highpass", "bandpass", "lowshelf", "highshelf", "peaking", "notch"]
@@ -67,11 +68,12 @@ function addBiquadControl(context) {
     typeControl.append(typeLabel, typeInput)
 
     // Add remaining controls
-    function createNumberInput(id, min, max, step, value, param, convertTo, convertFrom) {
+    function createNumberInput(id, text, min, max, step, value, param, convertTo, convertFrom) {
         var control = document.createElement("div")
         control.className = "control"
         var label = document.createElement("label")
         label.htmlFor = id
+        label.innerText = text
 
         var slider = document.createElement("input")
         slider.type = 'range'
@@ -104,12 +106,14 @@ function addBiquadControl(context) {
         return control
     }
 
-    var freqControl = createNumberInput("biquadFrequency-" + num, 1, 20000, 1, biquad.frequency.defaultValue, biquad.frequency, toMel, function(m) { return Math.round(fromMel(m)) })
+    var freqControl = createNumberInput("biquadFrequency-" + num, "Frequency", 1, 20000, 1, biquad.frequency.defaultValue, biquad.frequency, toMel, function(m) { return Math.round(fromMel(m)) })
 
-    var qControl = createNumberInput("biquadQ-" + num, 0, 10, 0.0001, biquad.Q.defaultValue, biquad.Q, doNothing, doNothing)
+    var qControl = createNumberInput("biquadQ-" + num, "Q", 0, 10, 0.0001, biquad.Q.defaultValue, biquad.Q, doNothing, doNothing)
 
-    var gainControl = createNumberInput("biquadGain-" + num, -20, 20, 0.1, biquad.gain.defaultValue, biquad.gain, doNothing, doNothing)
+    var gainControl = createNumberInput("biquadGain-" + num, "Gain", -20, 20, 0.1, biquad.gain.defaultValue, biquad.gain, doNothing, doNothing)
 
+    var removeButtonDiv = document.createElement("div")
+    removeButtonDiv.className = "control"
     var removeButton = document.createElement("button")
     removeButton.id = "biquadDelete-" + num
     removeButton.innerHTML = "Delete"
@@ -118,6 +122,7 @@ function addBiquadControl(context) {
         group.remove()
         context.eq.redraw();
     })
+    removeButtonDiv.append(removeButton)
 
     typeInput.addEventListener("change", function(event) {
         biquad.type = event.target.value
@@ -131,8 +136,26 @@ function addBiquadControl(context) {
     })
 
     // Add the controls to the group
-    group.append(typeControl, freqControl, qControl, gainControl, removeButton)
+    group.append(typeControl, freqControl, qControl, gainControl, removeButtonDiv)
     typeInput.dispatchEvent(new Event("change"))
     context.eq.redraw();
     document.getElementById("filterControls").append(group)
+}
+
+function createPopup(content) {
+    var bg = document.createElement("div")
+    bg.className = "popup-bg"
+    var popup = document.createElement("div")
+    popup.className = "popup-content"
+    for (var i = 0; i < arguments.length; i++) {
+        popup.append(arguments[i])
+    }
+    bg.append(popup)
+    bg.addEventListener("click", function(event) {
+        bg.remove()
+    })
+
+    document.body.append(bg);
+
+    return bg
 }
