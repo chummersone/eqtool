@@ -1,3 +1,15 @@
+function toMel(f) {
+    return 2595 * Math.log10(1 + (f / 700))
+}
+
+function fromMel(m) {
+    return 700 * ((10 ** (m / 2595)) - 1)
+}
+
+function doNothing(x) {
+    return x
+}
+
 function playAudio(context, file) {
     const reader = new FileReader()
     reader.onloadend = (e) => {
@@ -49,36 +61,48 @@ function addBiquadControl(context) {
     typeControl.append(typeLabel, typeInput)
 
     // Add remaining controls
-    function createNumberInput(id, min, max, step, value, onChange) {
+    function createNumberInput(id, min, max, step, value, convertTo, convertFrom) {
         var control = document.createElement("div")
         control.className = "control"
         var label = document.createElement("label")
         label.htmlFor = id
-        var input = document.createElement("input")
-        input.id = id
-        input.min = min
-        input.max = max
-        input.step = step
-        input.value = value
-        input.addEventListener("change", onChange)
-        control.append(label, input)
+
+        var slider = document.createElement("input")
+        slider.type = 'range'
+        slider.id = id
+        slider.min = convertTo(min)
+        slider.max = convertTo(max)
+        slider.step = (convertTo(max) - convertTo(min)) / ((max - min) / step)
+        slider.value = convertTo(value)
+
+        var number = document.createElement("input")
+        number.type = 'number'
+        number.id = id + '_number'
+        number.min = min
+        number.max = max
+        number.step = step
+        number.value = value
+
+        slider.addEventListener("change", function(event) {
+            number.value = convertFrom(slider.value)
+            biquad.frequency.value = number.value
+            context.eq.redraw();
+        })
+        number.addEventListener("change", function(event) {
+            slider.value = convertTo(number.value)
+            biquad.frequency.value = number.value
+            context.eq.redraw()
+        })
+
+        control.append(label, slider, number)
         return control
     }
 
-    var freqControl = createNumberInput("biquadFrequency-" + num, 1, 20000, 1, biquad.frequency.defaultValue, function(event) {
-        biquad.frequency.value = Number(event.target.value)
-        context.eq.redraw();
-    })
+    var freqControl = createNumberInput("biquadFrequency-" + num, 1, 20000, 1, biquad.frequency.defaultValue, toMel, function(m) { return Math.round(fromMel(m)) })
 
-    var qControl = createNumberInput("biquadQ-" + num, 0, 14, 0.00001, biquad.Q.defaultValue, function(event) {
-        biquad.Q.value = Number(event.target.value)
-        context.eq.redraw();
-    })
+    var qControl = createNumberInput("biquadQ-" + num, 0, 14, 0.00001, biquad.Q.defaultValue, doNothing, doNothing)
 
-    var gainControl = createNumberInput("biquadGain-" + num, -40, 40, 0.1, biquad.gain.defaultValue, function(event) {
-        biquad.gain.value = Number(event.target.value)
-        context.eq.redraw();
-    })
+    var gainControl = createNumberInput("biquadGain-" + num, -40, 40, 0.1, biquad.gain.defaultValue, doNothing, doNothing)
 
     var removeButton = document.createElement("div")
     removeButton.className = "button"
