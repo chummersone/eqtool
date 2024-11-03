@@ -1,3 +1,13 @@
+const enableMatrix = {
+    lowpass: { Q: true, gain: false},
+    highpass: { Q: true, gain: false},
+    bandpass: { Q: true, gain: false},
+    lowshelf: { Q: false, gain: true},
+    highshelf: { Q: false, gain: true},
+    peaking: { Q: true, gain: true},
+    notch: { Q: true, gain: false},
+}
+
 function toMel(f) {
     return 2595 * Math.log10(1 + (f / 700))
 }
@@ -53,10 +63,6 @@ function addBiquadControl(context) {
         option.text = types[i]
         typeInput.appendChild(option)
     }
-    typeInput.addEventListener("change", function(event) {
-        biquad.type = event.target.value
-        context.eq.redraw();
-    })
     typeInput.value = biquad.type.defaultValue
     typeControl.append(typeLabel, typeInput)
 
@@ -83,7 +89,7 @@ function addBiquadControl(context) {
         number.step = step
         number.value = value
 
-        slider.addEventListener("change", function(event) {
+        slider.addEventListener("input", function(event) {
             number.value = convertFrom(slider.value)
             param.value = number.value
             context.eq.redraw();
@@ -113,8 +119,20 @@ function addBiquadControl(context) {
         context.eq.redraw();
     })
 
+    typeInput.addEventListener("change", function(event) {
+        biquad.type = event.target.value
+        Array.prototype.slice.call(qControl.getElementsByTagName('input')).forEach(function(elem) {
+            elem.disabled = !enableMatrix[biquad.type]["Q"]
+        })
+        Array.prototype.slice.call(gainControl.getElementsByTagName('input')).forEach(function(elem) {
+            elem.disabled = !enableMatrix[biquad.type]["gain"]
+        })
+        context.eq.redraw();
+    })
+
     // Add the controls to the group
     group.append(typeControl, freqControl, qControl, gainControl, removeButton)
+    typeInput.dispatchEvent(new Event("change"))
     context.eq.redraw();
     document.getElementById("filterControls").append(group)
 }
