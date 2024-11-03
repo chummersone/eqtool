@@ -205,6 +205,12 @@ class EqDesigner extends ParametricEQ {
             pointStyle: false
         }
 
+        Chart.defaults.font = {
+            size: 14,
+            family: "'Nanum Gothic', sans-serif",
+            weight: 400,
+        }
+
         this.magPlot = new Chart(magCtx, {
             type: 'line',
             data: {
