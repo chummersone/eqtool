@@ -1,3 +1,11 @@
+html {
+    font-family: "Nanum Gothic", sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    font-style: normal;
+}
+
+
 th, td {
     text-align: center;
 }
@@ -42,8 +50,8 @@ div#eqGraph {
 div.controlGroup, div.popup-content div.control {
     padding: 0px;
     display: inline-block;
-    margin: 10px;
-    max-width: 300px;
+    margin: 5px;
+    width: 300px;
     vertical-align: top;
 }
 
@@ -53,7 +61,7 @@ div.controlGroup input, div.controlGroup label {
 }
 
 div.control {
-    padding: 10px;
+    padding: 5px;
     margin: 5px;
 }
 
@@ -62,5 +70,5 @@ div.controlGroup div.control {
 }
 
 div.controlPanel {
-    margin: 10px;
+    margin: 5px;
 }

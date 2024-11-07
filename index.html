@@ -20,6 +20,21 @@
         <script src="scripts/eq.js"></script>
         <script src="scripts/ui-control.js"></script>
         <script>
+            Chart.defaults.elements.point = {
+                pointStyle: false
+            }
+
+            Chart.defaults.font = {
+                size: 14,
+                family: "'Nanum Gothic', sans-serif",
+                weight: 400,
+            }
+
+            Chart.defaults.borderColor = "#444"
+            Chart.defaults.color = '#ccc';
+            Chart.defaults.animation.duration = 100;
+
+
             var context = {
                 audioCtx: null,
                 eq: null,
@@ -101,6 +116,7 @@
                     control.append(fsLabel, fsSelect)
 
                     createPopup(control, coeffTable)
+                    fsSelect.value = 48000
                     fsSelect.dispatchEvent(new Event("change"))
                 })
             })

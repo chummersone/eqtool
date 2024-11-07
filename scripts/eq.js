@@ -201,16 +201,6 @@ class EqDesigner extends ParametricEQ {
             },
         }
 
-        Chart.defaults.elements.point = {
-            pointStyle: false
-        }
-
-        Chart.defaults.font = {
-            size: 14,
-            family: "'Nanum Gothic', sans-serif",
-            weight: 400,
-        }
-
         this.magPlot = new Chart(magCtx, {
             type: 'line',
             data: {
@@ -252,8 +242,6 @@ class EqDesigner extends ParametricEQ {
                             text: 'Phase / °',
                             display: true,
                         },
-                        min: -180,
-                        max: 180,
                     },
                 },
                 plugins: {
